@@ -1,26 +1,44 @@
 
+// const canvas = wx.createCanvas();
+// const context = canvas.getContext('2d');
 
-
-const canvas = wx.createCanvas();
-const context = canvas.getContext('2d');
 export default class Main{
   
   constructor(){
-    drawbackground();
-    this.drawRect(20,50);
     
-   
+  this.login()
   }
-  drawRect(x,y) {
-    context.fillStyle = '#1aad19';
-    context.fillRect(canvas.width/2-50, 0, 100, 100);
-  }
-}
 
-function  drawbackground() {
-  context.fillStyle = '#FFB90F';
-  context.fillRect(0,0,canvas.width,canvas.height);
-  context.fillStyle = '#48D1CC';
-  context.fillRect(0,canvas.height/5*3,canvas.width/7*4,canvas.height/5);
+  login(){
+    wx.cloud.callFunction({
+      name: 'add',
+      success: res => {
+        GameGlobal.openid = res.result.openid;
+        console.log(GameGlobal.openid);
+        wx.cloud.callFunction({
+          name: 'getdata',
+          data:{
+            _openid:GameGlobal.openid
+          },
+          success: res => {
+            if(res.result.data.length === 0){
+              console.log('现在要调用云函数创建该用户的数据。')
+              wx.cloud.callFunction({
+                name:'adddata',
+                data:{
+                  _openid:GameGlobal.openid
+                }
+              })
+            }else{
+              console.log('数据库里已经存在这个用户，他的openid是:' + res.result.data[0]._openid);
+              console.log(res);
+            }    
+          },
+          fail: err => { 
+          }
+        })
+      }
+    })
+  }
 
 }
